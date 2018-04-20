@@ -24,7 +24,7 @@
 #include "dbg.h"
 #include "request.h"
 
-#define SERVER_INFO "Server: Alraune v0.8.3\r\n"
+#define SERVER_INFO "Server: Alraune v0.8.1\r\n"
 #define FILE_BUFFER_SIZE 10240
 
 
@@ -88,7 +88,9 @@ int read_line(int sockfd, char *buf, int len)
 	return i;
 }
 
-
+/*
+ * handles the incoming requests
+ */
 void handle_request(int client_sock)
 {
 	char buf[1024];
@@ -96,7 +98,6 @@ void handle_request(int client_sock)
 
 	int len;
 	len = read_line(client_sock, buf, sizeof buf);
-	debug("len: %d", len);
 	debug("%s", buf);
 
 	switch(buf[0]) {
@@ -104,6 +105,7 @@ void handle_request(int client_sock)
 			get_request(client_sock, buf);
 			break;
 		case 'H': // HEAD
+			not_implemented_501(client_sock);
 			break;
 		case 'P':
 			if(buf[1] == 'O')      // POST
@@ -112,23 +114,28 @@ void handle_request(int client_sock)
 				printf("PUT");
 			else if(buf[1] == 'A') // PATCH
 				printf("PATCH");
+			not_implemented_501(client_sock);
 			break;
 		case 'D': // DELETE
+			not_implemented_501(client_sock);
 			break;
 		case 'T': // TRACE
+			not_implemented_501(client_sock);
 			break;
 		case 'O': // OPTIONS
+			not_implemented_501(client_sock);
 			break;
 		case 'C': // CONNECT
+			not_implemented_501(client_sock);
 			break;
 		default:
+			not_implemented_501(client_sock);
 			sentinel("unimplemented request: %s", buf);
 			break;
 	}
 
 	sleep(1); // stupid hack wich solves the "connection is reset" errors atleast on linux;
 error:
-
 	return;
 }
 
@@ -170,6 +177,10 @@ int get_url(char* request, char* url, int url_len)
 	return 0;
 }
 
+
+/*
+ * gets the file length, what did you expect?
+ */
 int get_file_length(FILE* fp)
 {
 	int f_strsize;
@@ -182,6 +193,10 @@ int get_file_length(FILE* fp)
 	return f_strsize;
 }
 
+
+/*
+ * reverses a string
+ */
 char* reverse_string(char *str)
 {
     char temp;
@@ -191,7 +206,7 @@ char* reverse_string(char *str)
     int i;
     int j = len;
 
-    for(i = 0; i < len / 2; i++)
+    for(i = 0; i <= len / 2; i++)
     {
         temp = str[j];
         str[j] = str[i];
@@ -200,10 +215,15 @@ char* reverse_string(char *str)
     }
 }
 
+
+/*
+ * get the content type of a file
+ */
 void get_content_type(char* buf, char* fpath, int buf_size)
 {
 	char filetype[20];
 	int fpath_length = strlen(fpath);
+	int found_dot = 0;
 	int i = 0;
 	for(int j = fpath_length-1; j > 0 && i < 20; j--) {
 		if (fpath[j] != '.') {
@@ -212,21 +232,77 @@ void get_content_type(char* buf, char* fpath, int buf_size)
 		}
 		else {
 			filetype[i] = '\0';
+			found_dot = 1;
 			break;
 		}
 	}
+	filetype[19] = '\0';
 	reverse_string(filetype);
 	debug("%s", filetype);
 
-	switch(12) {
-		case 1:
-			strcpy(buf, "text/html");
-			break;
-
-		default:
-			log_warn("not implemented file type: %s", filetype);
-			strcpy(buf, "text/html");
-			break;
+	if (!found_dot) {
+		strcpy(buf, "text/plain");
+	}
+	else if (strcasecmp(filetype, "css") == 0) {
+		strcpy(buf, "text/css");
+	}
+	else if (strcasecmp(filetype, "html") == 0) {
+		strcpy(buf, "text/html");
+	}
+	else if (strcasecmp(filetype, "htm") == 0) {
+		strcpy(buf, "text/html");
+	}
+	else if (strcasecmp(filetype, "js") == 0) {
+		strcpy(buf, "text/javascript");
+	}
+	else if (strcasecmp(filetype, "gif") == 0) {
+		strcpy(buf, "image/gif");
+	}
+	else if (strcasecmp(filetype, "jpeg") == 0) {
+		strcpy(buf, "image/jpeg");
+	}
+	else if (strcasecmp(filetype, "jpg") == 0) {
+		strcpy(buf, "image/jpeg");
+	}
+	else if (strcasecmp(filetype, "bmp") == 0) {
+		strcpy(buf, "image/bmp");
+	}
+	else if (strcasecmp(filetype, "webp") == 0) {
+		strcpy(buf, "image/webp");
+	}
+	else if (strcasecmp(filetype, "svg") == 0) {
+		strcpy(buf, "image/svg+xml");
+	}
+	else if (strcasecmp(filetype, "ico") == 0) {
+		strcpy(buf, "image/x-icon");
+	}
+	else if (strcasecmp(filetype, "wav") == 0) {
+		strcpy(buf, "audio/wave");
+	}
+	else if (strcasecmp(filetype, "webm") == 0) {
+		strcpy(buf, "video/webm");
+	}
+	else if (strcasecmp(filetype, "ogg") == 0) {
+		strcpy(buf, "application/ogg");
+	}
+	else if (strcasecmp(filetype, "midi") == 0) {
+		strcpy(buf, "audio/midi");
+	}
+	else if (strcasecmp(filetype, "mp3") == 0) {
+		strcpy(buf, "application/mpeg");
+	}
+	else if (strcasecmp(filetype, "pdf") == 0) {
+		strcpy(buf, "application/pdf");
+	}
+	else if (strcasecmp(filetype, "md") == 0) {
+		strcpy(buf, "text/plain");
+	}
+	else if (strcasecmp(filetype, "txt") == 0) {
+		strcpy(buf, "text/plain");
+	}
+	else {
+		log_warn("not implemented file type: %s", filetype);
+		strcpy(buf, "application/octet-stream");
 	}
 
 	return;
@@ -242,18 +318,18 @@ void get_request(int client_sock, char* request)
 	check(rc == 0, "Something went wrong when getting the url of request");
 	debug("fpath: ./%s", url);
 
-	if (strstr(url, "..") != NULL) { // we can't have clients access anything outside the "root_folder".
-		forbidden_403(client_sock);
-		goto error;
-	}
-
 	// add ./ to the start of the requested path
 	// this is done so that the client can't reach outside of the root_folder the server has selected
 	// i.o.w. it can't acces your system files any more
 	sprintf(fpath, "./%s", url);
 
+	if (strstr(fpath, "..") != NULL) { // we can't have clients access anything outside the "root_folder".
+		forbidden_403(client_sock);
+		goto error;
+	}
+
 	rc = ok_200(client_sock, fpath);
-	check(rc > 0, "something went wrong while responding with OK 200");
+	check(rc >= 0, "something went wrong while responding with OK 200");
 
 	sleep(1); // stupid hack wich solves the "connection is reset" errors atleast on linux;
 	rc = close(client_sock);
@@ -262,7 +338,6 @@ void get_request(int client_sock, char* request)
 	return;
 
 error:
-
 	log_warn("f: %s", fpath);
 	sleep(1); // stupid hack wich solves the "connection is reset" errors atleast on linux;
 	rc = close(client_sock);
@@ -271,7 +346,7 @@ error:
 	return;
 }
 
-int ok_200 (int client_sock, char* fpath)
+int ok_200(int client_sock, char* fpath)
 {
 	FILE * fp;
 	fp = fopen(fpath, "rb");
@@ -279,7 +354,6 @@ int ok_200 (int client_sock, char* fpath)
 
 	if (!fp) { // if you cannot read the file return an 404 error
 		not_found_404(client_sock);
-		fclose(fp);
 		return -1;
 	}
 	f_strsize = get_file_length(fp);
@@ -287,6 +361,7 @@ int ok_200 (int client_sock, char* fpath)
 	char buf[1024];
 	char type_buf[20];
 	int len;
+
 	strcpy(buf, "HTTP/1.1 200 OK\r\n");
 	len = strlen(buf);
 	send_all(client_sock, buf, &len);
@@ -310,11 +385,13 @@ int ok_200 (int client_sock, char* fpath)
 	char* content;
 	content = (char*) malloc(FILE_BUFFER_SIZE);
 	int nread;
+
 	// send the actual content
 	while ((nread = fread(content, 1, sizeof content, fp)) > 0) {
         	len = strlen(content);
         	send_all(client_sock, content, &len);
 	}
+
 	fclose(fp);
 	free(content);
 
@@ -364,10 +441,8 @@ void not_found_404(int client_sock)
 	char content[1024];
 	strcpy(content, "<html><body><H1>404 Not found</H1></body></html>\r\n");
 	cont_len = strlen(content);
-
 	char buf[1024];
 	int len;
-
 	strcpy(buf, "HTTP/1.1 404 NOT FOUND\r\n");
 	len = strlen(buf);
 	send_all(client_sock, buf, &len);
@@ -404,7 +479,6 @@ void not_implemented_501(int client_sock)
 
 	char buf[1024];
 	int len;
-
 	strcpy(buf, "HTTP/1.1 501 Method Not Implemented\r\n");
 	len = strlen(buf);
 	send_all(client_sock, buf, &len);

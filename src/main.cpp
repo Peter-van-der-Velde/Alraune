@@ -31,15 +31,17 @@
 #define BACKLOG 10 // how many pending connections queue will hold
 #define MAXDATASIZE 100 // max number of bytes we can get at once
 
-#define M_POOL 4 // main threadpool size
+#define M_POOL 44 // main threadpool size
+#define IO_POOL 10 // IO threadpool size
 
 /**
  * TODO:
  * 1. parse GET request.
- * 2. write responses.
- * 3. add security check (send_all, etc...)
- * 4. add I/O Pool.
- * 5. add cache.
+ * 2. parse HEADERS request.
+ * 3. write responses.
+ * 4. add security check (send_all, etc...)
+ * 5. add I/O Pool.
+ * 6. add cache.
  */
 
 
