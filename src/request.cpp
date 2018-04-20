@@ -20,12 +20,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 #include "dbg.h"
 #include "request.h"
 
 #define SERVER_INFO "Server: Alraune v0.8.1\r\n"
-#define FILE_BUFFER_SIZE 10240
+#define FILE_BUFFER_SIZE 8096
 
 
 /*
@@ -88,6 +92,7 @@ int read_line(int sockfd, char *buf, int len)
 	return i;
 }
 
+
 /*
  * handles the incoming requests
  */
@@ -134,7 +139,6 @@ void handle_request(int client_sock)
 			break;
 	}
 
-	sleep(1); // stupid hack wich solves the "connection is reset" errors atleast on linux;
 error:
 	return;
 }
@@ -262,7 +266,7 @@ void get_content_type(char* buf, char* fpath, int buf_size)
 		strcpy(buf, "image/jpeg");
 	}
 	else if (strcasecmp(filetype, "jpg") == 0) {
-		strcpy(buf, "image/jpeg");
+		strcpy(buf, "image/jpg");
 	}
 	else if (strcasecmp(filetype, "bmp") == 0) {
 		strcpy(buf, "image/bmp");
@@ -308,7 +312,9 @@ void get_content_type(char* buf, char* fpath, int buf_size)
 	return;
 }
 
-
+/*
+ * takes care of the get request
+ */
 void get_request(int client_sock, char* request)
 {
 	char url[255];
@@ -346,11 +352,15 @@ error:
 	return;
 }
 
+
+/*
+ * responds with a 200 OK message and the requested file
+ */
 int ok_200(int client_sock, char* fpath)
 {
+	int f_strsize;
 	FILE * fp;
 	fp = fopen(fpath, "rb");
-	int f_strsize;
 
 	if (!fp) { // if you cannot read the file return an 404 error
 		not_found_404(client_sock);
@@ -361,14 +371,13 @@ int ok_200(int client_sock, char* fpath)
 	char buf[1024];
 	char type_buf[20];
 	int len;
-
 	strcpy(buf, "HTTP/1.1 200 OK\r\n");
 	len = strlen(buf);
 	send_all(client_sock, buf, &len);
 	strcpy(buf, SERVER_INFO);
 	len = strlen(buf);
 	send_all(client_sock, buf, &len);
-	sprintf(buf, "Content-length: %d\r\n", f_strsize);
+	sprintf(buf, "Content-Length: %d\r\n", f_strsize);
 	len = strlen(buf);
 	send_all(client_sock, buf, &len);
 	strcpy(buf, "Connection: close\r\n");
@@ -382,22 +391,27 @@ int ok_200(int client_sock, char* fpath)
 	len = strlen(buf);
 	send_all(client_sock, buf, &len);
 
-	char* content;
-	content = (char*) malloc(FILE_BUFFER_SIZE);
-	int nread;
+	fclose(fp);
 
-	// send the actual content
-	while ((nread = fread(content, 1, sizeof content, fp)) > 0) {
-        	len = strlen(content);
-        	send_all(client_sock, content, &len);
+	int fd;
+	fd = open(fpath,O_RDONLY);
+	if (fd == -1) {
+		return -1;
 	}
 
-	fclose(fp);
-	free(content);
+	static char buffer[FILE_BUFFER_SIZE+1];
+	int ret;
+	while (	(ret = read(fd, buffer, FILE_BUFFER_SIZE)) > 0 ) {
+		write(client_sock, buffer, ret);
+	}
 
 	return 0;
 }
 
+
+/*
+ * responds with a 403 FORBIDDEN message
+ */
 void forbidden_403(int client_sock)
 {
 	int cont_len;
@@ -434,6 +448,10 @@ void forbidden_403(int client_sock)
 	return;
 }
 
+
+/*
+ * responds with a 404 NOT FOUND message
+ */
 void not_found_404(int client_sock)
 {
 	int cont_len;
@@ -469,6 +487,9 @@ void not_found_404(int client_sock)
 }
 
 
+/*
+ * responds with a 501 METHOD NOT IMPLEMENTED message
+ */
 void not_implemented_501(int client_sock)
 {
 	int cont_len;

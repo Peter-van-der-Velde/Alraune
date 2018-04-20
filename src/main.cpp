@@ -36,12 +36,9 @@
 
 /**
  * TODO:
- * 1. parse GET request.
- * 2. parse HEADERS request.
- * 3. write responses.
- * 4. add security check (send_all, etc...)
- * 5. add I/O Pool.
- * 6. add cache.
+ * 1. parse HEADERS request.
+ * 2. add cache.
+ * 3. add I/O Pool.
  */
 
 
