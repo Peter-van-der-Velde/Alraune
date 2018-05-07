@@ -8,8 +8,7 @@ to build this project you will need the following programs installed:
 
 
 ### Installing
-To use this program you will need to have a http server installed.
-Or follow these few steps to install one using npm however this requires that you have npm and nodejs installed.
+to build this program you first need a local copy of it:
 ```bash
 # Clone the github repository
 $ git clone https://github.com/Peter-van-der-Velde/Alraune.git
