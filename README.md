@@ -1,15 +1,6 @@
 # Alraune
 simple multithreaded C(++) webserver.
 
-### To-Do
-* parse headers request
-* add cache
-* add io_threadpool
-* convert to C
-* w32 port
-* add man-page
-* add `--help` flag
-
 ### Prerequisites
 to build this project you will need the following programs installed:
 * gcc
