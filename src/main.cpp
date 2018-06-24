@@ -39,6 +39,8 @@
  * 1. parse HEADERS request.
  * 2. add cache.
  * 3. add I/O Pool.
+ * 4. convert to pure C
+ * 5. write w32 port
  */
 
 
