@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -O2 -Wall -Wextra -Isrc -rdynamic -DNDEBUG -pthread
+CXXFLAGS=-g -Wall -Wextra -Isrc -rdynamic -pthread
 LIBS=
 PREFIX?=/usr/local
 
@@ -13,12 +13,12 @@ TESTS=$(patsubst %.cpp,%,$(TEST_SRC))
 TARGET=./build/alraune
 
 # The Target Build
+dev: CXXFLAGS += -O2 -DNDEBUG
 all: build $(TARGET) tests
 
-dev: CXXFLAGS=-g -Wall -Isrc -Wall -Wextra -pthread $(OPTFLAGS)
-dev: all
+dev: CXXFLAGS += -Os
+dev: build $(TARGET) tests
 
-$(TARGET): CXXFLAGS += -fPIC
 $(TARGET): $(OBJECTS) $(DEPS)
 	$(CXX) $^ $(CXXFLAGS) $(LIBS) -o $@
 
