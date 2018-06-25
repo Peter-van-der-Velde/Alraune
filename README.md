@@ -1,5 +1,6 @@
 # Alraune
 simple multithreaded C(++) webserver.
+![build_status](https://gitlab.com/Peter_van_der_Velde/Alraune/badges/master/build.svg)
 
 ### Prerequisites
 to build this project you will need the following programs installed:
