@@ -14,10 +14,10 @@ TARGET=./build/alraune
 
 # The Target Build
 dev: CXXFLAGS += -O2 -DNDEBUG
-all: build $(TARGET) tests
+all: build $(TARGET)
 
 dev: CXXFLAGS += -Os
-dev: build $(TARGET) tests
+dev: build $(TARGET)
 
 $(TARGET): $(OBJECTS) $(DEPS)
 	$(CXX) $^ $(CXXFLAGS) $(LIBS) -o $@
