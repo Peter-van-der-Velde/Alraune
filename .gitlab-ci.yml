@@ -19,4 +19,4 @@ compile:
 
 test:
   stage: test
-  script: make test
+  script: make tests
