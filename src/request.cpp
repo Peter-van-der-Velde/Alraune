@@ -24,27 +24,27 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 #include "dbg.h"
 #include "request.h"
 
 #define SERVER_INFO "Server: Alraune v0.8.1\r\n"
 #define FILE_BUFFER_SIZE 8096
 
-
 /*
  * this ensures that all bytes will be send,
  * because sometimes send() does't send the full buffer.
  */
-int send_all(int sockfd, char *buf, int *len)
+int send_all(int sockfd, char* buf, int* len)
 {
 	int total_send = 0;
 
 	int bytesleft = *len;
 	int n;
-	while(total_send < *len) {
-		n = send(sockfd, buf+total_send, bytesleft, 0);
-		if (n == -1) { break; }
+	while (total_send < *len) {
+		n = send(sockfd, buf + total_send, bytesleft, 0);
+		if (n == -1) {
+			break;
+		}
 		total_send += n;
 		bytesleft -= n;
 	}
@@ -56,26 +56,24 @@ int send_all(int sockfd, char *buf, int *len)
 	// debug("tls: %d", total_send);
 
 	*len = total_send; // return number actually sent here
-	return (n==-1) ? -1 : 0; // return -1 on failure, 0 on success
+	return (n == -1) ? -1 : 0; // return -1 on failure, 0 on success
 }
-
 
 /*
  * reads a single line from the socket
  */
-static int read_line(int sockfd, char *buf, int len)
+static int read_line(int sockfd, char* buf, int len)
 {
 	int i = 0;
 	char c = '\a';
 	ssize_t n;
 
-	for (i = 0;(i < len - 1) && (c != '\n'); i++) {
+	for (i = 0; (i < len - 1) && (c != '\n'); i++) {
 		n = recv(sockfd, &c, 1, 0);
 
 		if (n <= 0) {
 			break;
-		}
-		else {
+		} else {
 			if (c == '\r') {
 				n = recv(sockfd, &c, 1, MSG_PEEK); // peek at the first char of the queue
 
@@ -92,7 +90,6 @@ static int read_line(int sockfd, char *buf, int len)
 	return i;
 }
 
-
 /*
  * handles the incoming requests
  */
@@ -104,7 +101,7 @@ void handle_request(int client_sock)
 	len = read_line(client_sock, buf, sizeof buf);
 	debug("%s", buf);
 
-	switch(buf[0]) {
+	switch (buf[0]) {
 		case 'G': // GET
 			get_request(client_sock, buf);
 			break;
@@ -112,11 +109,11 @@ void handle_request(int client_sock)
 			not_implemented_501(client_sock);
 			break;
 		case 'P':
-			if(buf[1] == 'O')      // POST
+			if (buf[1] == 'O') // POST
 				printf("POST");
-			else if(buf[1] == 'U') // PUT
+			else if (buf[1] == 'U') // PUT
 				printf("PUT");
-			else if(buf[1] == 'A') // PATCH
+			else if (buf[1] == 'A') // PATCH
 				printf("PATCH");
 			not_implemented_501(client_sock);
 			break;
@@ -142,7 +139,6 @@ error:
 	return;
 }
 
-
 /*
  * get the url from the request
  */
@@ -152,14 +148,12 @@ int get_url(char* request, char* url, int url_len)
 	int i = 0;
 
 	for (int j = 1; i < url_len && request[j] != '\0' && request[j] != '\n' && request[j] != '?'; j++) {
-		if (isspace((int) request[j])) {
-
+		if (isspace((int)request[j])) {
 			if (first_space == 0) {
 				first_space = 1;
 				j++; // skip first character (the first '/') after the first space
 				continue;
-			}
-			else
+			} else
 				break;
 		}
 
@@ -180,7 +174,6 @@ int get_url(char* request, char* url, int url_len)
 	return 0;
 }
 
-
 /*
  * gets the file length, what did you expect?
  */
@@ -191,33 +184,29 @@ int get_file_length(FILE* fp)
 		fseek(fp, 0, SEEK_END);
 		f_strsize = ftell(fp); // get the length of the file
 		rewind(fp); // reset fp to the start of the file
-
 	}
 	return f_strsize;
 }
 
-
 /*
  * reverses a string
  */
-char* reverse_string(char *str)
+char* reverse_string(char* str)
 {
-    char temp;
-    int len = strlen(str) - 1;
-    if (len == -1) // if it is an empty string, just return
-    	return str;
-    int i;
-    int j = len;
+	char temp;
+	int len = strlen(str) - 1;
+	if (len == -1) // if it is an empty string, just return
+		return str;
+	int i;
+	int j = len;
 
-    for(i = 0; i <= len / 2; i++)
-    {
-        temp = str[j];
-        str[j] = str[i];
-        str[i] = temp;
-        j--;
-    }
+	for (i = 0; i <= len / 2; i++) {
+		temp = str[j];
+		str[j] = str[i];
+		str[i] = temp;
+		j--;
+	}
 }
-
 
 /*
  * get the content type of a file
@@ -228,12 +217,11 @@ static void get_content_type(char* buf, char* fpath, int buf_size)
 	int fpath_length = strlen(fpath);
 	int found_dot = 0;
 	int i = 0;
-	for(int j = fpath_length-1; j > 0 && i < 20; j--) {
+	for (int j = fpath_length - 1; j > 0 && i < 20; j--) {
 		if (fpath[j] != '.') {
 			filetype[i] = fpath[j];
 			i++;
-		}
-		else {
+		} else {
 			filetype[i] = '\0';
 			found_dot = 1;
 			break;
@@ -245,72 +233,51 @@ static void get_content_type(char* buf, char* fpath, int buf_size)
 
 	if (!found_dot) {
 		strcpy(buf, "text/plain");
-	}
-	else if (strcasecmp(filetype, "css") == 0) {
+	} else if (strcasecmp(filetype, "css") == 0) {
 		strcpy(buf, "text/css");
-	}
-	else if (strcasecmp(filetype, "html") == 0) {
+	} else if (strcasecmp(filetype, "html") == 0) {
 		strcpy(buf, "text/html");
-	}
-	else if (strcasecmp(filetype, "htm") == 0) {
+	} else if (strcasecmp(filetype, "htm") == 0) {
 		strcpy(buf, "text/html");
-	}
-	else if (strcasecmp(filetype, "js") == 0) {
+	} else if (strcasecmp(filetype, "js") == 0) {
 		strcpy(buf, "text/javascript");
-	}
-	else if (strcasecmp(filetype, "gif") == 0) {
+	} else if (strcasecmp(filetype, "gif") == 0) {
 		strcpy(buf, "image/gif");
-	}
-	else if (strcasecmp(filetype, "jpeg") == 0) {
+	} else if (strcasecmp(filetype, "jpeg") == 0) {
 		strcpy(buf, "image/jpeg");
-	}
-	else if (strcasecmp(filetype, "jpg") == 0) {
+	} else if (strcasecmp(filetype, "jpg") == 0) {
 		strcpy(buf, "image/jpg");
-	}
-	else if (strcasecmp(filetype, "bmp") == 0) {
+	} else if (strcasecmp(filetype, "bmp") == 0) {
 		strcpy(buf, "image/bmp");
-	}
-	else if (strcasecmp(filetype, "webp") == 0) {
+	} else if (strcasecmp(filetype, "webp") == 0) {
 		strcpy(buf, "image/webp");
-	}
-	else if (strcasecmp(filetype, "svg") == 0) {
+	} else if (strcasecmp(filetype, "svg") == 0) {
 		strcpy(buf, "image/svg+xml");
-	}
-	else if (strcasecmp(filetype, "ico") == 0) {
+	} else if (strcasecmp(filetype, "ico") == 0) {
 		strcpy(buf, "image/x-icon");
-	}
-	else if (strcasecmp(filetype, "wav") == 0) {
+	} else if (strcasecmp(filetype, "wav") == 0) {
 		strcpy(buf, "audio/wave");
-	}
-	else if (strcasecmp(filetype, "webm") == 0) {
+	} else if (strcasecmp(filetype, "webm") == 0) {
 		strcpy(buf, "video/webm");
-	}
-	else if (strcasecmp(filetype, "ogg") == 0) {
+	} else if (strcasecmp(filetype, "ogg") == 0) {
 		strcpy(buf, "application/ogg");
-	}
-	else if (strcasecmp(filetype, "midi") == 0) {
+	} else if (strcasecmp(filetype, "midi") == 0) {
 		strcpy(buf, "audio/midi");
-	}
-	else if (strcasecmp(filetype, "mp3") == 0) {
+	} else if (strcasecmp(filetype, "mp3") == 0) {
 		strcpy(buf, "application/mpeg");
-	}
-	else if (strcasecmp(filetype, "pdf") == 0) {
+	} else if (strcasecmp(filetype, "pdf") == 0) {
 		strcpy(buf, "application/pdf");
-	}
-	else if (strcasecmp(filetype, "md") == 0) {
+	} else if (strcasecmp(filetype, "md") == 0) {
 		strcpy(buf, "text/plain");
-	}
-	else if (strcasecmp(filetype, "txt") == 0) {
+	} else if (strcasecmp(filetype, "txt") == 0) {
 		strcpy(buf, "text/plain");
-	}
-	else {
+	} else {
 		log_warn("not implemented file type: %s", filetype);
 		strcpy(buf, "application/octet-stream");
 	}
 
 	return;
 }
-
 
 /*
  * takes care of the get request
@@ -352,14 +319,13 @@ error:
 	return;
 }
 
-
 /*
  * responds with a 200 OK message and the requested file
  */
 int ok_200(int client_sock, char* fpath)
 {
 	int f_strsize;
-	FILE * fp;
+	FILE* fp;
 	fp = fopen(fpath, "rb");
 
 	if (!fp) { // if you cannot read the file return an 404 error
@@ -394,20 +360,19 @@ int ok_200(int client_sock, char* fpath)
 	fclose(fp);
 
 	int fd;
-	fd = open(fpath,O_RDONLY);
+	fd = open(fpath, O_RDONLY);
 	if (fd == -1) {
 		return -1;
 	}
 
-	static char buffer[FILE_BUFFER_SIZE+1];
+	static char buffer[FILE_BUFFER_SIZE + 1];
 	int ret;
-	while (	(ret = read(fd, buffer, FILE_BUFFER_SIZE)) > 0 ) {
+	while ((ret = read(fd, buffer, FILE_BUFFER_SIZE)) > 0) {
 		write(client_sock, buffer, ret);
 	}
 
 	return 0;
 }
-
 
 /*
  * responds with a 403 FORBIDDEN message
@@ -448,7 +413,6 @@ void forbidden_403(int client_sock)
 	return;
 }
 
-
 /*
  * responds with a 404 NOT FOUND message
  */
@@ -486,7 +450,6 @@ void not_found_404(int client_sock)
 	return;
 }
 
-
 /*
  * responds with a 501 METHOD NOT IMPLEMENTED message
  */
@@ -523,4 +486,3 @@ void not_implemented_501(int client_sock)
 	send_all(client_sock, content, &cont_len);
 	return;
 }
-

@@ -26,17 +26,15 @@
 
 #define BACKLOG 10 // how many pending connections queue will hold
 
-
 /*
  * bind to first usable address
  */
-struct addrinfo* bind_to_first_address(int *server_sock, struct addrinfo *servinfo)
+struct addrinfo* bind_to_first_address(int* server_sock, struct addrinfo* servinfo)
 {
-	struct addrinfo *rp;
-	const int yes=1; // needed to set the value in the setsockopt function
+	struct addrinfo* rp;
+	const int yes = 1; // needed to set the value in the setsockopt function
 
-	for(rp = servinfo; rp != NULL; rp = rp->ai_next) {
-
+	for (rp = servinfo; rp != NULL; rp = rp->ai_next) {
 		if ((*server_sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) == -1) {
 			perror("server: socket");
 			continue;
@@ -62,7 +60,6 @@ error:
 	exit(1);
 }
 
-
 /*
  * initialize a listening socket on the 'port' you specified in the argument
  */
@@ -86,10 +83,10 @@ int init(int port)
 	}
 
 	// bind to first usable address
-	struct addrinfo *rp = bind_to_first_address(&server_sock, servinfo);
+	struct addrinfo* rp = bind_to_first_address(&server_sock, servinfo);
 	check(rp != NULL, "server: failed to bind\n")
 
-	check(listen(server_sock, BACKLOG) != -1, "listening error");
+		check(listen(server_sock, BACKLOG) != -1, "listening error");
 
 	return server_sock;
 

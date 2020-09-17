@@ -52,6 +52,10 @@ install: all
 run:
 	$(TARGET)
 
+.PHONY: format
+format:
+	clang-format -i $(SOURCES) $(DEPS)
+
 # The Checker
 check:
 	@echo Files with potentially dangerous functions.

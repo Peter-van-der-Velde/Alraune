@@ -6,7 +6,6 @@
  \/_/\/_/\/_/\/__/\/_/ \/_/\/_/\/_/
 */
 
-
 #include <cstdio>
 #include <cstdlib>
 #include <cerrno>
@@ -34,13 +33,13 @@
 #define M_POOL 44 // main threadpool size
 #define IO_POOL 10 // IO threadpool size
 
-void *get_in_addr(struct sockaddr *sa);
-int get_port(int argc, char const *argv[]);
+void* get_in_addr(struct sockaddr* sa);
+int get_port(int argc, char const* argv[]);
 
 /*
  * get sockaddr, either IPv4 or IPv6:
  */
-void *get_in_addr(struct sockaddr *sa)
+void* get_in_addr(struct sockaddr* sa)
 {
 	if (sa->sa_family == AF_INET) {
 		return &(((struct sockaddr_in*)sa)->sin_addr);
@@ -48,11 +47,10 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-
 /*
  * get the port from the cli-arguments or from the pre-defined standard port
  */
-int get_port(int argc, char const *argv[])
+int get_port(int argc, char const* argv[])
 {
 	if (argc < 2)
 		return PORT;
@@ -60,8 +58,7 @@ int get_port(int argc, char const *argv[])
 	return atoi(argv[1]);
 }
 
-
-int main(int argc, char const *argv[])
+int main(int argc, char const* argv[])
 {
 	ThreadPool pool(M_POOL);
 
@@ -75,12 +72,12 @@ int main(int argc, char const *argv[])
 	server_sock = init(port);
 	printf("server: listening on port %d...\n", port);
 
-	int num_threads =  M_POOL;
+	int num_threads = M_POOL;
 	debug("amount of threads: %d\n", num_threads);
 
-	while(1) {
+	while (1) {
 		sin_size = sizeof their_addr;
-		client_sock = accept(server_sock, (struct sockaddr *)&their_addr, &sin_size);
+		client_sock = accept(server_sock, (struct sockaddr*)&their_addr, &sin_size);
 
 		if (client_sock == -1) {
 			perror("accept");
@@ -88,10 +85,10 @@ int main(int argc, char const *argv[])
 		}
 
 		// print info about incoming request
-		inet_ntop(their_addr.ss_family,	get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
+		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr*)&their_addr), s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
-		pool.enqueue([client_sock]() {handle_request(client_sock); });
+		pool.enqueue([client_sock]() { handle_request(client_sock); });
 		// pool.enqueue(std::bind(handle_request, client_sock));
 	}
 
