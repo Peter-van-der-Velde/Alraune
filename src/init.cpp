@@ -60,13 +60,13 @@ struct addrinfo* bind_to_first_address(int *server_sock, struct addrinfo *servin
 error:
 	freeaddrinfo(servinfo);
 	exit(1);
-};
+}
 
 
 /*
  * initialize a listening socket on the 'port' you specified in the argument
  */
-int init(unsigned short port)
+int init(int port)
 {
 	struct addrinfo hints, *servinfo;
 	int server_sock = -1;

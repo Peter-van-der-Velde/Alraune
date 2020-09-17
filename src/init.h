@@ -3,6 +3,6 @@
 
 struct addrinfo* bind_to_first_address(int *server_sock, struct addrinfo *servinfo);
 
-int init(unsigned short port);
+int init(int port);
 
 #endif

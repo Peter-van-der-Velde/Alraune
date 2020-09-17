@@ -34,15 +34,8 @@
 #define M_POOL 44 // main threadpool size
 #define IO_POOL 10 // IO threadpool size
 
-/**
- * TODO:
- * 1. parse HEADERS request.
- * 2. add cache.
- * 3. add I/O Pool.
- * 4. convert to pure C
- * 5. write w32 port
- */
-
+void *get_in_addr(struct sockaddr *sa);
+int get_port(int argc, char const *argv[]);
 
 /*
  * get sockaddr, either IPv4 or IPv6:
@@ -72,7 +65,7 @@ int main(int argc, char const *argv[])
 {
 	ThreadPool pool(M_POOL);
 
-	u_short port = get_port(argc, argv);
+	int port = get_port(argc, argv);
 	int server_sock = -1;
 	int client_sock = -1;
 	struct sockaddr_storage their_addr;

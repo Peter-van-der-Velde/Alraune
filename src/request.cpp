@@ -63,11 +63,11 @@ int send_all(int sockfd, char *buf, int *len)
 /*
  * reads a single line from the socket
  */
-int read_line(int sockfd, char *buf, int len)
+static int read_line(int sockfd, char *buf, int len)
 {
 	int i = 0;
 	char c = '\a';
-	int n;
+	ssize_t n;
 
 	for (i = 0;(i < len - 1) && (c != '\n'); i++) {
 		n = recv(sockfd, &c, 1, 0);
@@ -99,7 +99,6 @@ int read_line(int sockfd, char *buf, int len)
 void handle_request(int client_sock)
 {
 	char buf[1024];
-	char url[255];
 
 	int len;
 	len = read_line(client_sock, buf, sizeof buf);
@@ -187,7 +186,7 @@ int get_url(char* request, char* url, int url_len)
  */
 int get_file_length(FILE* fp)
 {
-	int f_strsize;
+	int f_strsize = -1;
 	if (fp) {
 		fseek(fp, 0, SEEK_END);
 		f_strsize = ftell(fp); // get the length of the file
@@ -223,7 +222,7 @@ char* reverse_string(char *str)
 /*
  * get the content type of a file
  */
-void get_content_type(char* buf, char* fpath, int buf_size)
+static void get_content_type(char* buf, char* fpath, int buf_size)
 {
 	char filetype[20];
 	int fpath_length = strlen(fpath);
@@ -318,7 +317,7 @@ void get_content_type(char* buf, char* fpath, int buf_size)
  */
 void get_request(int client_sock, char* request)
 {
-	char url[255];
+	char url[254];
 	char fpath[255];
 
 	int rc = get_url(request, url, sizeof(url));

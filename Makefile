@@ -1,5 +1,10 @@
-CXX=g++
-CXXFLAGS=-g -Wall -Wextra -Isrc -rdynamic -pthread
+CXXFLAGS=-Wall -Wextra -pedantic -Wshadow -Wconversion -Wdouble-promotion
+CXXFLAGS+=-Wnull-dereference -Wformat=2 -Wformat-overflow -Wformat-truncation
+CXXFLAGS+=-Wswitch-default -Wformat-security -Wmissing-declarations -Winit-self
+CXXFLAGS+=-Wpointer-arith -Wswitch-enum -Wundef -Wstrict-prototypes
+CXXFLAGS+=-D_FORTIFY_SOURCE=1 -fstack-protector -fno-common
+CXXFLAGS+=-Isrc -rdynamic -pthread
+LDFLAGS=-Wl,-O1 -Wl,-z,relro -Wl,-z,now
 LIBS=
 PREFIX?=/usr/local
 
@@ -13,18 +18,17 @@ TESTS=$(patsubst %.cpp,%,$(TEST_SRC))
 TARGET=./build/alraune
 
 # The Target Build
-dev: CXXFLAGS += -O2 -DNDEBUG
+all: CXXFLAGS += -O2 -DNDEBUG
 all: build $(TARGET)
 
-dev: CXXFLAGS += -Os
+dev: CXXFLAGS += -Og -g
 dev: build $(TARGET)
 
 $(TARGET): $(OBJECTS) $(DEPS)
-	$(CXX) $^ $(CXXFLAGS) $(LIBS) -o $@
+	$(CXX) $^ $(CXXFLAGS) $(LDFLAGS) $(LIBS) -o $@
 
 build:
 	@mkdir -p build
-	@mkdir -p bin
 
 # The Unit Tests
 .PHONY: tests
@@ -43,6 +47,10 @@ clean:
 install: all
 	install -d $(DESTDIR)/$(PREFIX)/bin/
 	install $(TARGET) $(DESTDIR)/$(PREFIX)/bin/
+
+.PHONY: run
+run:
+	$(TARGET)
 
 # The Checker
 check:
